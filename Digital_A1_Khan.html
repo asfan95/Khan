@@ -1,0 +1,195 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8" />
+    <title>Phaser - Making your first game, part 7</title>
+	<script type="text/javascript" src="js/phaser.min.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+function preload() {
+
+    game.load.image('sky', 'assets/sky.png');
+    game.load.image('ground', 'assets/platform.png');
+    game.load.image('star', 'assets/star.png');
+
+    game.load.spritesheet('ichigo', 'assets/ichigo.png', 72, 0);
+
+    game.load.spritesheet('enemy', 'assets/slime.png', 90, 0);
+}
+
+var player;
+var enemy;
+
+var platforms;
+var cursors;
+
+var score = 0;
+var scoreText;
+
+function create() {
+
+    //  We're going to be using physics, so enable the Arcade Physics system
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
+    //  A simple background for our game
+    game.add.sprite(0, 0, 'sky');
+
+    //  The platforms group contains the ground and the 2 ledges we can jump on
+    platforms = game.add.group();
+
+    //  We will enable physics for any object that is created in this group
+    platforms.enableBody = true;
+
+    // Here we create the ground.
+    var ground = platforms.create(0, game.world.height - 64, 'ground');
+
+    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+    ground.scale.setTo(2, 2);
+
+    //  This stops it from falling away when you jump on it
+    ground.body.immovable = true;
+
+    // The player and its settings
+    player = game.add.sprite(300, game.world.height - 150, 'ichigo');
+
+    //  We need to enable physics on the player
+    game.physics.arcade.enable(player);
+
+    //  Player physics properties. Give the little guy a slight bounce.
+    player.body.bounce.y = 0.1;
+    player.body.gravity.y = 975;
+    player.body.collideWorldBounds = true;
+
+    // Player Animations
+    player.animations.add('stand', [0, 1, 2, 3], 10, true);
+    player.animations.add('run', [4, 5, 6, 7, 8, 9, 10], 10, true);
+    anim=player.animations.add('attack', [12, 13, 14, 15, 16, 17, 18], 10, true);
+
+    //player direction
+	player.anchor.setTo(.4,.4);
+
+
+    //  Finally some stars to collect
+    enemy = game.add.group();
+
+    //  We will enable physics for any star that is created in this group
+    enemy.enableBody = true;
+
+    //  Our controls.
+    cursors = game.input.keyboard.createCursorKeys();
+    
+    //  The score
+    scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+  
+}
+
+var direction=0;
+var attack=0;
+
+function collideEnemy (player, enemy) {
+    
+    // Removes the star from the screen
+    enemy.kill();
+
+    //  Add and update the score
+    score += 10;
+    scoreText.text = 'Score: ' + score;
+
+}
+function spawnEnemy(one, two)
+{
+    var enem = enemy.create(one , game.world.height - 150, 'enemy');
+
+    enem.animations.add('walking', [0, 1, 2, 3, 4, 5], 10, true);
+    enem.animations.play('walking');
+    
+}
+function update() {
+
+    var x = Math.floor((Math.random() * 500) + 1);
+    var z = Math.floor((Math.random() * 100) + 1);
+
+    if(x<5)
+    {
+            spawnEnemy(7*z);
+    }
+
+    //  Collide the player and the stars with the platforms
+    game.physics.arcade.collide(player, platforms);
+
+    game.physics.arcade.overlap(player, enemy, collideEnemy, null, this);
+
+    //  Reset the players velocity (movement)
+    player.body.velocity.x = 0;
+
+
+    if((cursors.left.isDown && cursors.left.shiftKey))
+    {
+    	if(direction==0)
+        {
+			player.scale.x *= -1;
+			direction=1;
+        }
+		player.animations.play('attack');
+				
+    }
+    else if((cursors.right.isDown && cursors.right.shiftKey))
+    {
+        if(direction==1)
+        {
+			player.scale.x *= -1;
+			direction=0;
+        }
+		player.animations.play('attack',false);
+    }
+    else if (cursors.left.isDown)
+    {
+
+        //  Move to the left
+        player.body.velocity.x = -150;
+
+        if(direction==0)
+        {
+			player.scale.x *= -1;
+			direction=1;
+        }
+        player.animations.play('run');
+    }
+    else if (cursors.right.isDown)
+    {
+        //  Move to the right
+        if(direction==1)
+        {
+			player.scale.x *= -1;
+			direction=0;
+        }
+        player.body.velocity.x = 150;
+        player.animations.play('run');
+    }
+    else
+    {
+        //  Stand still
+        player.animations.play('stand');
+    }
+    
+    //  Allow the player to jump if they are touching the ground.
+    if (cursors.up.isDown && player.body.touching.down)
+    {
+        player.body.velocity.y = -350;
+    }
+
+}
+</script>
+
+</body>
+</html>
