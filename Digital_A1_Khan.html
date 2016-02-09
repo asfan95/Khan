@@ -11,7 +11,7 @@
     </style>
 </head>
 <body>
-
+arrow key-Move   shift&arrowkeys -attack   upkey-jump
 <script type="text/javascript">
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
@@ -20,15 +20,18 @@ function preload() {
 
     game.load.image('sky', 'assets/sky.png');
     game.load.image('ground', 'assets/platform.png');
-    game.load.image('star', 'assets/star.png');
 
     game.load.spritesheet('ichigo', 'assets/ichigo.png', 72, 0);
 
     game.load.spritesheet('enemy', 'assets/slime.png', 90, 0);
+
+    game.load.spritesheet('wave', 'assets/wave.png', 45, 0);
+
 }
 
 var player;
 var enemy;
+var wave;
 
 var platforms;
 var cursors;
@@ -132,7 +135,6 @@ function update() {
     //  Reset the players velocity (movement)
     player.body.velocity.x = 0;
 
-
     if((cursors.left.isDown && cursors.left.shiftKey))
     {
     	if(direction==0)
@@ -141,6 +143,12 @@ function update() {
 			direction=1;
         }
 		player.animations.play('attack');
+
+        wave = game.add.sprite( player.body.x-50, game.world.height - 150, 'wave');
+        wave.scale.x*=-1
+        wave.animations.add('walking', [0, 1], 10, true);
+        wave.animations.play('walking');
+
 				
     }
     else if((cursors.right.isDown && cursors.right.shiftKey))
@@ -150,7 +158,11 @@ function update() {
 			player.scale.x *= -1;
 			direction=0;
         }
-		player.animations.play('attack',false);
+		player.animations.play('attack');
+     wave = game.add.sprite( player.body.x+50, game.world.height - 150, 'wave');
+        wave.animations.add('walking', [0, 1], 10, true);
+        wave.animations.play('walking');
+
     }
     else if (cursors.left.isDown)
     {
